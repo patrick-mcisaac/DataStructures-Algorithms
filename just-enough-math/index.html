@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Growth Rate Visualization</title>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				margin: 2em;
+				display: flex;
+				flex-direction: column;
+				gap: 3em;
+			}
+
+			.chart-block {
+				display: flex;
+				align-items: flex-start;
+				gap: 2em;
+			}
+
+			canvas {
+				max-width: 600px;
+				flex: 1;
+			}
+
+			pre.code {
+				background: #f4f4f4;
+				padding: 1em;
+				border: 1px solid #ccc;
+				overflow-x: auto;
+				width: 400px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<h1>Algorithm Runtime Growth Rate</h1>
+
+		<div class="chart-block">
+			<canvas id="chartO1"></canvas>
+
+			<details>
+				<summary>
+					Click to reveal one possible function implementation
+				</summary>
+				<pre class="code">
+// O(1) - Constant Time
+              function constantTime(n) {
+      // Example: accessing array element, simple calculation
+      return n[0]; // Always takes same time regardless of n
+    }</pre
+				>
+			</details>
+		</div>
+
+		<div class="chart-block">
+			<canvas id="chartOn"></canvas>
+			<details>
+				<summary>
+					Click to reveal one possible function implementation
+				</summary>
+				<pre class="code">
+// O(n) - Linear Time
+    function linearTime(n) {
+      // TODO: Implement linear time logic
+      // Example: iterate through array once with more work per iteration
+      // use this for your simple calculation sum += Math.random()
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        // Add more computational work to make timing visible
+        sum += Math.random()
+      }
+      return sum;
+    }}</pre
+				>
+			</details>
+		</div>
+
+		<div class="chart-block">
+			<canvas id="chartOn2"></canvas>
+			<details>
+				<summary>
+					Click to reveal one possible function implementation
+				</summary>
+				<pre class="code">
+// O(n^2) - Quadratic Time
+    function quadraticTime(n) {
+      // Example: nested loops
+      let count = 0;
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          count++;
+        }
+      }
+      return count;
+    }</pre
+				>
+			</details>
+		</div>
+
+		<script>
+			const SLOW_FACTOR = 2
+			const BASE_OVERHEAD = 1
+
+			const inputSizes = []
+			for (let i = 3500; i <= 10000; i += 300) {
+				inputSizes.push(i)
+			}
+
+			function simulateRuntime(fn, complexityType) {
+				const results = []
+				const numRuns = 10 // Number of runs to calculate median from
+
+				for (let i = 0; i < inputSizes.length; i++) {
+					const n = inputSizes[i]
+					try {
+						const runtimes = []
+
+						// Run multiple times to get median
+						for (let run = 0; run < numRuns; run++) {
+							const startTime = performance.now()
+							fn(n)
+							const endTime = performance.now()
+							const actualRuntime = endTime - startTime
+							runtimes.push(actualRuntime * 100)
+						}
+
+						// Calculate median
+						runtimes.sort((a, b) => a - b)
+						const median = runtimes[Math.floor(numRuns / 2)]
+						results.push(median)
+					} catch (e) {
+						results.push(null)
+					}
+				}
+				return results
+			}
+
+			function constantTime(n) {
+				// TODO: Implement constant time logic
+				// Example: accessing array element, simple calculation
+				console.log("yea")
+			}
+
+			function linearTime(n) {
+				let sum = 0
+				// TODO: Implement linear time logic
+				// Example: iterate through array once with more work per iteration
+				// use this for your simple calculation sum += Math.random()
+				for (let i = 0; i < n; i++) {
+					sum += Math.random()
+				}
+				return sum
+			}
+
+			function quadraticTime(n) {
+				// TODO: Implement quadratic time logic
+				// Example: nested loops
+				let count = 0
+				for (let i = 0; i < n; i++) {
+					for (let j = 0; j < n; j++) {
+						count++
+					}
+				}
+				return count
+			}
+
+			// Linear regression function
+			function linearRegression(x, y) {
+				const n = x.length
+				const sumX = x.reduce((a, b) => a + b, 0)
+				const sumY = y.reduce((a, b) => a + b, 0)
+				const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0)
+				const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0)
+
+				const slope =
+					(n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
+				const intercept = (sumY - slope * sumX) / n
+
+				return { slope, intercept }
+			}
+
+			// Calculate linear regression for each dataset
+			function calculateRegressionLine(data) {
+				const validData = data
+					.map((y, i) => ({ x: inputSizes[i], y }))
+					.filter(point => point.y !== null)
+				const x = validData.map(point => point.x)
+				const y = validData.map(point => point.y)
+
+				if (x.length < 2) return inputSizes.map(() => 0)
+
+				const { slope, intercept } = linearRegression(x, y)
+				return inputSizes.map(xi => slope * xi + intercept)
+			}
+
+			// Reference curves to match simulated slow computer
+			const referenceO1 = inputSizes.map(() => 0.05) // Constant around 0.25ms
+			const referenceOn = inputSizes.map(n => n / 1100) // Linear growth
+			const referenceOn2 = inputSizes.map(
+				n => 1 + ((n * n) / 1000000) * 90
+			) // Quadratic growth
+
+			function createChart(
+				id,
+				label,
+				data,
+				color,
+				reference,
+				refLabel,
+				showRegression = true,
+				yMax = null
+			) {
+				let datasets = [
+					{
+						label: label,
+						data: data,
+						borderColor: color,
+						backgroundColor: color,
+						fill: false,
+						tension: 1.0
+					}
+				]
+
+				// Add linear regression only if requested
+				if (showRegression) {
+					const regressionLine = calculateRegressionLine(data)
+					datasets = [
+						{
+							label: "Linear Regression for " + label,
+							data: regressionLine,
+							borderColor: color,
+							backgroundColor: color,
+							borderWidth: 2,
+							fill: false,
+							tension: 0,
+							pointRadius: 0
+						}
+					]
+				}
+
+				// Add reference line
+				datasets.push({
+					label: refLabel,
+					data: reference,
+					borderDash: [5, 5],
+					borderColor: "#888",
+					backgroundColor: "#888",
+					fill: false,
+					tension: 1.0,
+					pointRadius: 0
+				})
+
+				// Configure y-axis
+				const yAxisConfig = {
+					title: {
+						display: true,
+						text: "Simulated Runtime (ms)"
+					},
+					beginAtZero: true
+				}
+
+				// Set custom max if provided
+				if (yMax !== null) {
+					yAxisConfig.max = yMax
+				}
+
+				new Chart(document.getElementById(id), {
+					type: "line",
+					data: {
+						labels: inputSizes,
+						datasets: datasets
+					},
+					options: {
+						responsive: true,
+						scales: {
+							x: {
+								title: {
+									display: true,
+									text: "Input Size (n)"
+								}
+							},
+							y: yAxisConfig
+						}
+					}
+				})
+			}
+
+			const runtimesO1 = simulateRuntime(constantTime, "constant")
+			const runtimesOn = simulateRuntime(linearTime, "linear")
+			const runtimesOn2 = simulateRuntime(quadraticTime, "quadratic")
+
+			createChart(
+				"chartO1",
+				"O(1) - Constant Time",
+				runtimesO1,
+				"green",
+				referenceO1,
+				"Target: Flat",
+				false,
+				3
+			)
+			createChart(
+				"chartOn",
+				"O(n) - Linear Time",
+				runtimesOn,
+				"blue",
+				referenceOn,
+				"Target: Linear",
+				true
+			)
+			createChart(
+				"chartOn2",
+				"O(n^2) - Quadratic Time",
+				runtimesOn2,
+				"red",
+				referenceOn2,
+				"Target: Quadratic",
+				false
+			)
+		</script>
+	</body>
+</html>
