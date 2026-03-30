@@ -1,0 +1,9 @@
+Table try {
+    id int [pk, increment]
+    
+}
+
+Table second {
+    id int [pk, increment]
+    tryId int [ref: < try.id]
+}
