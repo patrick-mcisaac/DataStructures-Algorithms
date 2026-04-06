@@ -1,55 +1,58 @@
-function countSubarraysWithSumAndMaxAtMost(nums, k, M) {
+
+
+
+/*
+ * Complete the 'bestInGenre' function below.
+ *
+ * The function is expected to return a STRING.
+ * The function accepts STRING genre as parameter.
+ *
+ * Base URL: https://jsonmock.hackerrank.com/api/tvseries?page=
+ */
+
+
+async function bestInGenre(genre) {
     // Write your code here
-    // using 2 pointers and sliding window
-    // create count variable
-    // loop through array and get sum of window
-    // if sum === k and if all are less than or equal to M
-    // if left is negative move it forward?
-    // increment count
+    /* 
+    fetch the first page
+    get the info for how many pages there are
     
+    fetch each page
+    filter the array to have only the genre i need
+    find highest imdb rating with lowest name alphabetically if there is a tie
     
-    // count var
+     */
+   
+    const firstResponse = await fetchPages(1)
     
-    // for left = 0 loop
-        // sum var
-        // right = left
-        
-        // while loop checking nums[right] is <= M and less than nums length
-            // add nums[right] to sum
-            // if sum is target (k)
-                // increment count 
-        // slide right
+    const genreArray = firstResponse.data.filter(d => d.genre === genre)
     
-    // return count
-    let count = 0
-
-    for(let left = 0; left < nums.length; left ++){
-        let sum = 0
-        let right = left
-
-        while( right < nums.length && nums[right] <= M){
-            sum+=nums[right]
-            if(sum === k){
-                count++
-            }
-            right++
-        }
+    for(let i = 2; i <= Number(firstResponse.total_pages); i++){
+        const response = await fetchPages(i)
+        const filtered = response.data.filter(d => d.genre === genre)
+        genreArray.push(...filtered)
     }
-    return count
-
+    
+    genreArray.sort((a,b) => {
+        if(Number(b.imdb_rating) - Number(a.imdb_rating) === 0){
+            a.name.localeComapre(b.name)
+        }else{
+            
+        Number(b.imdb_rating) - Number(a.imdb_rating)
+        }
+        })
+    
+    
+    return genreArray[0].name
+    
+    
 }
 
-console.log(countSubarraysWithSumAndMaxAtMost([1,2,1,2],3,5))
+async function fetchPages(page){
+    const response = await fetch(`https://jsonmock.hackerrank.com/api/tvseries?page=${page}`)
+    const results = await response.json()
+    return results
+}
 
-/* 
 
-sum = 3
-count = 2
-[-1,3,1]
-    l
-    r
-for loop over left
-slide right till you find greater than max digit or end, 
-every time sum = target add to count
-
-*/
+ console.log(bestInGenre("Action"))
