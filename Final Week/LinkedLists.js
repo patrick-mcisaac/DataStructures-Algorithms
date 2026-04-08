@@ -72,5 +72,15 @@ class LinkedList {
   forEach(fn) {
     // call fn(value, index) for each node
     // Your code here
+    if(!this.head){
+      return null
+    }
+    let current = this.head
+    let index = 0
+    while(current){
+      fn(current.value, index)
+      current = current.next
+      index++
+    }
   }
 }
