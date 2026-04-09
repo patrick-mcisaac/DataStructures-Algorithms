@@ -22,4 +22,23 @@ Should return tasks in order: [3, 2, 4, 1] (by id)
 function sortTasks(tasks){
   // Return new array sorted by ascending priority, then by earliest due date
   // Your code here
+  /* 
+  make a copy of array
+
+  call array sort
+
+  sorting function
+    if priority is same
+      compare earliest due date
+    sort priority
+  */
+ const sortedArray = [...tasks]
+
+ sortedArray.sort((a,b) => {
+  if(a.priority - b.priority === 0){
+   return a.due.localeCompare(b.due)
+  }
+  return a.priority - b.priority
+ })
+ return sortedArray
 }
